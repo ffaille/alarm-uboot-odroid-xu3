@@ -1,60 +1,51 @@
-# U-Boot: ODROID XU3/XU4/HC1
+# U-Boot: ODROID-XU3/XU4/HC1/HC2/MC1
 # Maintainer: Kevin Mihelich <kevin@archlinuxarm.org>
 
 buildarch=4
 
 pkgname=uboot-odroid-xu3
-pkgver=2018.01
-pkgrel=2
-pkgdesc="U-Boot for ODROID-XU3/XU4/HC1/HC2"
+pkgver=2020.01
+pkgrel=1
+pkgdesc="U-Boot for ODROID-XU3/XU4/HC1/HC2/MC1"
 arch=('armv7h')
-url='http://www.denx.de/wiki/U-Boot/WebHome'
+url='https://github.com/hardkernel/u-boot'
 license=('GPL')
 install=$pkgname.install
 backup=('boot/boot.txt' 'boot/boot.scr')
 makedepends=('bc' 'dtc145' 'git')
-_commit=fe2f831fd44a4071f58a42f260164544697aa666
-source=("ftp://ftp.denx.de/pub/u-boot/u-boot-${pkgver}.tar.bz2"
-        '0001-ARM-Samsung-Add-Exynos5422-based-Odroid-HC1-support.patch'
-        "bl1.bin::https://github.com/hardkernel/u-boot/raw/${_commit}/sd_fuse/hardkernel/bl1.bin.hardkernel"
-        'http://archlinuxarm.org/builder/src/xu3/bl2.bin'
-        "tzsw.bin::https://github.com/hardkernel/u-boot/raw/${_commit}/sd_fuse/hardkernel/tzsw.bin.hardkernel"
-        'sd_fusing.sh'
+source=('https://github.com/hardkernel/u-boot/archive/refs/tags/travis/odroidxu3-108.tar.gz'
+        '0001-fix-for-building-dtc-with-gcc-10.patch'
         'boot.txt'
         'mkscr')
-md5sums=('b42e45813369f4ae84490a481e531768'
-         '32190849dbeefab68897ce8ee6e2e033'
-         '38fb058aa3bcc568f9547c85517949b9'
-         '09c42bed980921cfc914e97e067ba9a3'
-         'fd01dda20b999e0b731c7063431a42b3'
-         '8a31acf5da5722698f54d1fe15c482bb'
+md5sums=('50c0abd886ad863b5a126d13028dfd09'
+         'a1c39b8e3da5c9eefcf0b8d3d5324193'
          '52306aa4cf2c3499ecfcea026fb2741c'
          '021623a04afd29ac3f368977140cfbfd')
+_srcname=u-boot-travis-odroidxu3-108
 
 prepare() {
-  cd u-boot-${pkgver}
+  cd ${_srcname}
 
-  patch -p1 -i ../0001-ARM-Samsung-Add-Exynos5422-based-Odroid-HC1-support.patch
+  patch -p1 -i ../0001-fix-for-building-dtc-with-gcc-10.patch
 }
 
 build() {
-  cd u-boot-${pkgver}
+  cd ${_srcname}
 
   unset CFLAGS CXXFLAGS CPPFLAGS
 
   make distclean
   make odroid-xu3_config
-  echo 'CONFIG_IDENT_STRING=" Arch Linux ARM"' >> .config
+  sed -i 's/CONFIG_IDENT_STRING=".*"/CONFIG_IDENT_STRING=" Arch Linux ARM"/' .config
   make EXTRAVERSION=-${pkgrel}
 }
 
 package() {
-  cd u-boot-${pkgver}
+  cd ${_srcname}
 
   mkdir -p "${pkgdir}"/boot
 
-  cp u-boot-dtb.bin ${pkgdir}/boot/u-boot.bin
-  cp ../{{bl{1,2},tzsw}.bin,sd_fusing.sh} "${pkgdir}"/boot
+  cp sd_fuse/* "${pkgdir}"/boot
   chmod +x "${pkgdir}"/boot/sd_fusing.sh
 
   tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ../boot.txt "${pkgdir}"/boot/boot.scr

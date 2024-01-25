@@ -26,13 +26,13 @@ sd_fuse() {
   fi
 
   echo "BL1 fusing"
-  dd iflag=dsync oflag=dsync if=/boot/bl1.bin of=$device seek=$signed_bl1_position
+  dd iflag=dsync oflag=dsync if=/boot/bl1.bin.hardkernel of=$device seek=$signed_bl1_position
   echo "BL2 fusing"
-  dd iflag=dsync oflag=dsync if=/boot/bl2.bin of=$device seek=$bl2_position
+  dd iflag=dsync oflag=dsync if=/boot/bl2.bin.hardkernel.1mb_uboot of=$device seek=$bl2_position
   echo "u-boot fusing"
   dd iflag=dsync oflag=dsync if=/boot/u-boot.bin of=$device seek=$uboot_position
   echo "TrustZone S/W fusing"
-  dd iflag=dsync oflag=dsync if=/boot/tzsw.bin of=$device seek=$tzsw_position
+  dd iflag=dsync oflag=dsync if=/boot/tzsw.bin.hardkernel of=$device seek=$tzsw_position
 }
 
 flash_uboot() {
